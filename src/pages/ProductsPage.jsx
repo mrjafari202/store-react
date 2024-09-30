@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router-dom';
 
-import { ImSearch } from 'react-icons/im';
-import { FaListUl } from 'react-icons/fa';
-
 import { useProducts } from '../context/ProductContext'
-import { createQueryObject, filterProducts, searchProducts } from '../helper/helper';
+import { createQueryObject, filterProducts, getInitialQuery, searchProducts } from '../helper/helper';
 
 import styles from './Products.module.css'
 
 import Card from '../components/Card';
 import Loader from '../components/Loader';
+import SearchBox from '../components/SearchBox';
+import SideBar from '../components/SideBar';
 
 const ProductsPage = () => {
     const products = useProducts();
@@ -22,49 +21,30 @@ const ProductsPage = () => {
 
     useEffect(() => {
         setDisplayed(products)
+
+        setQuery(getInitialQuery(searchParams))
     }, [products]);
 
     useEffect(() => {
         setSearchParams(query);
+        setSearch(query.search || "")
         let fainalProducts = searchProducts(products, query.search)
         fainalProducts = filterProducts(fainalProducts, query.category)
         setDisplayed(fainalProducts)
     }, [query])
 
-    const searchHandler = () => {
-        setQuery((query) => createQueryObject(query , {search}))
-    };
-    const categoriHandler = (e) => {
-        const { tagName } = e.target;
-        const category = e.target.innerText.toLowerCase();
-        if (tagName !== 'LI') return;
-        setQuery((query) => createQueryObject(query , {category}))
-    }
+  
     return (
         <>
-            <div>
-                <input type="text" placeholder='Search...' value={search} onChange={e => setSearch(e.target.value.toLowerCase().trim())} />
-                <button onClick={searchHandler}><ImSearch /></button>
-            </div>
+            <SearchBox  search={search} setSearch={setSearch} setQuery={setQuery}/>
             <div className={styles.container}>
                 <div className={styles.product}>
                     {!displayed.length && <Loader />}
                     {displayed.map((pro) => (<Card key={pro.id} data={pro} />))}
                 </div>
-                <div>
-                    <div>
-                        <FaListUl />
-                        <p>دسته بندی</p>
-                    </div>
-                    <ul onClick={categoriHandler}>
-                        <li>All</li>
-                        <li>Electronics</li>
-                        <li>Jewelery</li>
-                        <li>Men's Clothing</li>
-                        <li>Women's Clothing</li>
-                    </ul>
-                </div>
-            </div>c
+                
+            <SideBar query={query} setQuery={setQuery}/>
+            </div>
         </>
     )
 }
